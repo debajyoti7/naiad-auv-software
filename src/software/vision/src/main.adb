@@ -151,6 +151,7 @@ procedure main is
    CoreWrap : aliased Class_Core_Wrap.Core_Wrap;
    processingWrap : aliased Class_Processing_Wrap.Processing_Wrap;
    preprocessingWrap : aliased Class_Preprocessing_Wrap.Preprocessing_Wrap;
+   threeDWrap : aliased Class_three_D_Wrap.three_D_Wrap;
 
 begin
    --bgr histo
@@ -344,6 +345,8 @@ begin
          Vision.Image_Preprocessing.QNSF(iImageSource, iQNSFLocation, iQNSFThresh);
          Vision.Image_Preprocessing.QNSF(iQNSFLocation, iQNSFLocation, iQNSFThresh);
       end if;
+	
+	threeDWrap.Downsample;
 
       exit Endless_Loop when iNumRuns = 1;
 

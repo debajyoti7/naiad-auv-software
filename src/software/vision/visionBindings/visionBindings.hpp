@@ -127,3 +127,9 @@ virtual void quaterNionSwitchingFilter(int src, int dst, double QNSFThresh);
 
 Preprocessing_Wrap();
 };
+
+class three_D_Wrap{
+virtual void Downsample(void);
+
+three_D_Wrap();
+};

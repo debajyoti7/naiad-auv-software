@@ -311,4 +311,19 @@ package visionBindings_hpp is
 
    end;
    use Class_Preprocessing_Wrap;
+   package Class_three_D_Wrap is
+      type three_D_Wrap is tagged limited record
+         null;
+      end record;
+      pragma Import (CPP, three_D_Wrap);
+
+      procedure Downsample (this : access three_D_Wrap);  -- visionBindings.hpp:132
+      pragma Import (CPP, Downsample, "_ZN12three_D_Wrap10DownsampleEv");
+
+      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:134
+      pragma CPP_Constructor (New_three_D_Wrap, "_ZN12three_D_WrapC1Ev");
+
+
+   end;
+   use Class_three_D_Wrap;
 end visionBindings_hpp;
