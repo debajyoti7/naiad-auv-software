@@ -22,6 +22,7 @@
 #include "/usr/include/pcl-1.7/pcl/point_types.h"
 #include "/usr/include/pcl-1.7/pcl/filters/voxel_grid.h"
 #include "/usr/include/pcl-1.7/pcl/filters/statistical_outlier_removal.h"
+#include "/usr/include/pcl-1.7/pcl/conversions.h"
 
 
  
@@ -1168,13 +1169,21 @@ Preprocessing_Wrap::Preprocessing_Wrap(){}
 *               BEGIN 3D WRAP                                                                               *
 *********************************************************************************************************************/
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZ>::Ptr pc1Cloud (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr outliers_removed_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PCLPointCloud2::Ptr pc2Cloud (new pcl::PCLPointCloud2 ());
+pcl::PCLPointCloud2::Ptr downsampled_cloud (new pcl::PCLPointCloud2 ());
 
-void three_D_Wrap::readPointCloud(char * name)
+void three_D_Wrap::readPC1PointCloud(char * name)
 {
 	pcl::PCDReader reader;
-	reader.read<pcl::PointXYZ> (name, *cloud);
+	reader.read<pcl::PointXYZ> (name, *pc1Cloud);
+}
+
+void three_D_Wrap::readPC2PointCloud(char * name)
+{
+	pcl::PCDReader reader;
+	reader.read (name, *pc2Cloud);
 }
 
 void three_D_Wrap::removeOutliers(int meanK, double stddevMulThresh)
@@ -1183,7 +1192,7 @@ void three_D_Wrap::removeOutliers(int meanK, double stddevMulThresh)
 
   // Create the filtering object
   pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-  sor.setInputCloud (cloud);
+  sor.setInputCloud (pc1Cloud);
   sor.setMeanK (meanK);
   sor.setStddevMulThresh (stddevMulThresh);
   sor.filter (*outliers_removed_cloud);
@@ -1193,6 +1202,25 @@ void three_D_Wrap::removeOutliers(int meanK, double stddevMulThresh)
   writer.write<pcl::PointXYZ> ("outliers_removed.pcd", *outliers_removed_cloud, false);
 
 	std::cout<<"success\n";
+}
+
+void three_D_Wrap::downsample(double leafSize)//hardcoded to take output of oulier func, need to change to variable input laters
+{
+	pcl::PCLPointCloud2::Ptr cloud (new pcl::PCLPointCloud2 ());
+	
+	//convert outliers cloud to pcl point cloud2
+	pcl::toPCLPointCloud2(*outliers_removed_cloud, *cloud);
+	
+	// Create the filtering object
+	pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
+	sor.setInputCloud (cloud);
+	sor.setLeafSize (leafSize, leafSize, leafSize);
+	sor.filter (*downsampled_cloud);
+
+	pcl::PCDWriter writer;
+	writer.write ("downsampled.pcd", *downsampled_cloud, 
+         Eigen::Vector4f::Zero (), Eigen::Quaternionf::Identity (), false);
+
 }
 
 three_D_Wrap::three_D_Wrap(){}

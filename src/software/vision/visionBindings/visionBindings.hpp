@@ -129,9 +129,13 @@ Preprocessing_Wrap();
 };
 
 class three_D_Wrap{
-virtual void readPointCloud(char * name);
+virtual void readPC1PointCloud(char * name);
+
+virtual void readPC2PointCloud(char * name);
 
 virtual void removeOutliers(int meanK, double stddevMulThresh);
+
+virtual void downsample(double leafSize);
 
 three_D_Wrap();
 };

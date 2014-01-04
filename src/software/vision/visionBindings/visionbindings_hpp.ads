@@ -317,16 +317,22 @@ package visionBindings_hpp is
       end record;
       pragma Import (CPP, three_D_Wrap);
 
-      procedure readPointCloud (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:132
-      pragma Import (CPP, readPointCloud, "_ZN12three_D_Wrap14readPointCloudEPc");
+      procedure readPC1PointCloud (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:132
+      pragma Import (CPP, readPC1PointCloud, "_ZN12three_D_Wrap17readPC1PointCloudEPc");
+
+      procedure readPC2PointCloud (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:134
+      pragma Import (CPP, readPC2PointCloud, "_ZN12three_D_Wrap17readPC2PointCloudEPc");
 
       procedure removeOutliers
         (this : access three_D_Wrap;
          meanK : int;
-         stddevMulThresh : double);  -- visionBindings.hpp:134
+         stddevMulThresh : double);  -- visionBindings.hpp:136
       pragma Import (CPP, removeOutliers, "_ZN12three_D_Wrap14removeOutliersEid");
 
-      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:136
+      procedure downsample (this : access three_D_Wrap; leafSize : double);  -- visionBindings.hpp:138
+      pragma Import (CPP, downsample, "_ZN12three_D_Wrap10downsampleEd");
+
+      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:140
       pragma CPP_Constructor (New_three_D_Wrap, "_ZN12three_D_WrapC1Ev");
 
 
