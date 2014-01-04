@@ -1169,7 +1169,7 @@ Preprocessing_Wrap::Preprocessing_Wrap(){}
 *********************************************************************************************************************/
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZ>::Ptr outliers_removed_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
 void three_D_Wrap::readPointCloud(char * name)
 {
@@ -1177,36 +1177,22 @@ void three_D_Wrap::readPointCloud(char * name)
 	reader.read<pcl::PointXYZ> (name, *cloud);
 }
 
-void three_D_Wrap::Downsample(void)
+void three_D_Wrap::removeOutliers(int meanK, double stddevMulThresh)
 {
-	std::cout<<"starting downsampling\n";
-	
-/*
-  // Fill in the cloud data
-  pcl::PCDReader reader;
-  // Replace the path below with the path where you saved your file
-  reader.read<pcl::PointXYZ> ("table_scene_lms400.pcd", *cloud);
-*/
-  std::cerr << "Cloud before filtering: " << std::endl;
-  std::cerr << *cloud << std::endl;
+	std::cout<<"starting to remove outliers\n";
 
   // Create the filtering object
   pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
   sor.setInputCloud (cloud);
-  sor.setMeanK (50);
-  sor.setStddevMulThresh (1.0);
-  sor.filter (*cloud_filtered);
+  sor.setMeanK (meanK);
+  sor.setStddevMulThresh (stddevMulThresh);
+  sor.filter (*outliers_removed_cloud);
 
-  std::cerr << "Cloud after filtering: " << std::endl;
-  std::cerr << *cloud_filtered << std::endl;
-
+  //write downsampled point cloud to file
   pcl::PCDWriter writer;
-  writer.write<pcl::PointXYZ> ("table_scene_lms400_inliers.pcd", *cloud_filtered, false);
+  writer.write<pcl::PointXYZ> ("outliers_removed.pcd", *outliers_removed_cloud, false);
 
-  sor.setNegative (true);
-  sor.filter (*cloud_filtered);
-  writer.write<pcl::PointXYZ> ("table_scene_lms400_outliers.pcd", *cloud_filtered, false);
-	
 	std::cout<<"success\n";
 }
+
 three_D_Wrap::three_D_Wrap(){}

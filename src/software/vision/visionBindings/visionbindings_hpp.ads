@@ -320,8 +320,11 @@ package visionBindings_hpp is
       procedure readPointCloud (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:132
       pragma Import (CPP, readPointCloud, "_ZN12three_D_Wrap14readPointCloudEPc");
 
-      procedure Downsample (this : access three_D_Wrap);  -- visionBindings.hpp:134
-      pragma Import (CPP, Downsample, "_ZN12three_D_Wrap10DownsampleEv");
+      procedure removeOutliers
+        (this : access three_D_Wrap;
+         meanK : int;
+         stddevMulThresh : double);  -- visionBindings.hpp:134
+      pragma Import (CPP, removeOutliers, "_ZN12three_D_Wrap14removeOutliersEid");
 
       function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:136
       pragma CPP_Constructor (New_three_D_Wrap, "_ZN12three_D_WrapC1Ev");

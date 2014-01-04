@@ -12,7 +12,7 @@ procedure main is
    iNumRuns : Integer := 1;
    iDoUseBuffer : Integer := 0;
    iDoUseStatic : Integer := 1;
-   iDoShowOriginal : Integer := 1;
+   iDoShowOriginal : Integer := 0;
    iDoGaussian : Integer := 0;
    iDoSplit : Integer := 0;
    iDoCvtGrey : Integer := 0;
@@ -22,7 +22,7 @@ procedure main is
    iDoCanny : Integer := 0;
    iDoThresh : Integer := 0;
    iDoHoughCircles : Integer := 0;
-   iDoContours : Integer := 1;
+   iDoContours : Integer := 0;
    iDoApproxPoly : Integer := 0;
    iDoObjectTracking : Integer := 0;
    iDoFusion : Integer := 0;
@@ -36,6 +36,8 @@ procedure main is
    iDoEnhanceColors : Integer :=0;
    iDoContrast : Integer := 0;
    iDoQuaternionSwitchingFilter : Integer :=0;
+   iDoReadPointCould : Integer := 0;
+   iDoRemoveOutliers : Integer := 1;
 
 
    --image locations
@@ -143,6 +145,11 @@ procedure main is
 
    --QNSF
    iQNSFThresh : Interfaces.C.Double := 0.5;
+
+   --POINT CLOUD VARS
+   --Remove outliers
+   iMeanK : Interfaces.C.int := 50;
+   dStddevMulThresh : Interfaces.C.double := 1.0;
 
    --wait time when displaying images
    iWaitTime : interfaces.c.int := 0;
@@ -345,9 +352,15 @@ begin
          Vision.Image_Preprocessing.QNSF(iImageSource, iQNSFLocation, iQNSFThresh);
          Vision.Image_Preprocessing.QNSF(iQNSFLocation, iQNSFLocation, iQNSFThresh);
       end if;
-	
+
+       if(iDoReadPointCould =1) then
+         threeDWrap.readPointCloud(New_String("table_scene_lms400.pcd"));
+       end if;
+
+       if(iDoRemoveOutliers = 1) then	
 	threeDWrap.readPointCloud(New_String("table_scene_lms400.pcd"));
-	threeDWrap.Downsample;
+	threeDWrap.removeOutliers(iMeanK, dStddevMulThresh);
+       end if;
 
       exit Endless_Loop when iNumRuns = 1;
 

@@ -5,7 +5,7 @@ with Interfaces.C; use Interfaces.C;
 
 package cpp_4_7_4_bits_allocator_h is
 
-   package uu_alloc_swap_unknown23672_0 is
+   package uu_alloc_swap_unknown191608_0 is
       type uu_alloc_swap is limited record
          null;
       end record;
@@ -14,11 +14,11 @@ package cpp_4_7_4_bits_allocator_h is
       --  skipped func _S_do_it
 
    end;
-   use uu_alloc_swap_unknown23672_0;
+   use uu_alloc_swap_unknown191608_0;
 
 
 
-   package uu_alloc_neq_unknown58688_0 is
+   package uu_alloc_neq_unknown226624_0 is
       type uu_alloc_neq is limited record
          null;
       end record;
@@ -27,7 +27,7 @@ package cpp_4_7_4_bits_allocator_h is
       --  skipped func _S_do_it
 
    end;
-   use uu_alloc_neq_unknown58688_0;
+   use uu_alloc_neq_unknown226624_0;
 
 
 
