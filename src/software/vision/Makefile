@@ -57,9 +57,10 @@ GLIB = /usr/gnat/lib/gcc/x86_64-pc-linux-gnu/4.7.4/adalib/
 #Expanded from Package List
 LIB_DIR = ${foreach dir,${CSC_LIST},${dir}/lib/lib${dir}.so}
 
+
 ${MAIN} : objects imageobject preproobject proobject ${LIB_DIR}
 	gnatbind -aO${VISIONBINDINGSDIR} -aO${IMAGEOBJDIR} -aO${IMAGEPREPROCESSINGOBJDIR} -aO${IMAGEPROCESSINGOBJDIR} ${MAIN} ${CSC_LIST :%=-a0%/lib } -shared #--LINK=${GPLUS}	
-	gnatlink -f ${MAIN} ${CSC_LIST :%= -l%} ${ADDOBJ1} --LINK=g++ -lstdc++ `pkg-config opencv --cflags --libs`  #${GPLUS}
+	gnatlink -f ${MAIN} ${CSC_LIST :%= -l%} ${ADDOBJ1} -lboost_system -lpcl_common -lpcl_io -lpcl_filters --LINK=g++ -lstdc++ `pkg-config opencv --cflags --libs`  #${GPLUS}
 
 objects : 
 	#recompile the sources

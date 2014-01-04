@@ -7,6 +7,23 @@
 #include<vector>
 #include<string>
 #include<queue>
+
+//#include <pcl/io/pcd_io.h>
+//#include <pcl/point_types.h>
+//#include <pcl/filters/voxel_grid.h>
+
+//#include <Eigen>
+#include "/usr/include/pcl-1.7/pcl/pcl_config.h"
+#include "/usr/include/pcl-1.7/pcl/pcl_macros.h"
+#include "/usr/include/pcl-1.7/pcl/PCLHeader.h"
+
+#include "/usr/include/pcl-1.7/pcl/point_cloud.h"
+#include "/usr/include/pcl-1.7/pcl/io/pcd_io.h"
+#include "/usr/include/pcl-1.7/pcl/point_types.h"
+#include "/usr/include/pcl-1.7/pcl/filters/voxel_grid.h"
+#include "/usr/include/pcl-1.7/pcl/filters/statistical_outlier_removal.h"
+
+
  
 std::vector<cv::Mat> img(IMAGE_STORE_SIZE);
 std::vector<cv::Vec3f> circles;
@@ -1146,6 +1163,35 @@ Preprocessing_Wrap::Preprocessing_Wrap(){}
 
 void three_D_Wrap::Downsample(void)
 {
+	std::cout<<"starting downsampling\n";
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+
+  // Fill in the cloud data
+  pcl::PCDReader reader;
+  // Replace the path below with the path where you saved your file
+  reader.read<pcl::PointXYZ> ("table_scene_lms400.pcd", *cloud);
+
+  std::cerr << "Cloud before filtering: " << std::endl;
+  std::cerr << *cloud << std::endl;
+
+  // Create the filtering object
+  pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+  sor.setInputCloud (cloud);
+  sor.setMeanK (50);
+  sor.setStddevMulThresh (1.0);
+  sor.filter (*cloud_filtered);
+
+  std::cerr << "Cloud after filtering: " << std::endl;
+  std::cerr << *cloud_filtered << std::endl;
+
+  pcl::PCDWriter writer;
+  writer.write<pcl::PointXYZ> ("table_scene_lms400_inliers.pcd", *cloud_filtered, false);
+
+  sor.setNegative (true);
+  sor.filter (*cloud_filtered);
+  writer.write<pcl::PointXYZ> ("table_scene_lms400_outliers.pcd", *cloud_filtered, false);
+	
 	std::cout<<"success\n";
 }
 three_D_Wrap::three_D_Wrap(){}
