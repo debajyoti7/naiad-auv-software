@@ -129,6 +129,8 @@ Preprocessing_Wrap();
 };
 
 class three_D_Wrap{
+virtual void readPointCloud(char * name);
+
 virtual void Downsample(void);
 
 three_D_Wrap();

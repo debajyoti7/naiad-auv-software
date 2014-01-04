@@ -317,10 +317,13 @@ package visionBindings_hpp is
       end record;
       pragma Import (CPP, three_D_Wrap);
 
-      procedure Downsample (this : access three_D_Wrap);  -- visionBindings.hpp:132
+      procedure readPointCloud (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:132
+      pragma Import (CPP, readPointCloud, "_ZN12three_D_Wrap14readPointCloudEPc");
+
+      procedure Downsample (this : access three_D_Wrap);  -- visionBindings.hpp:134
       pragma Import (CPP, Downsample, "_ZN12three_D_Wrap10DownsampleEv");
 
-      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:134
+      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:136
       pragma CPP_Constructor (New_three_D_Wrap, "_ZN12three_D_WrapC1Ev");
 
 

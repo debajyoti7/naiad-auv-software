@@ -346,6 +346,7 @@ begin
          Vision.Image_Preprocessing.QNSF(iQNSFLocation, iQNSFLocation, iQNSFThresh);
       end if;
 	
+	threeDWrap.readPointCloud(New_String("table_scene_lms400.pcd"));
 	threeDWrap.Downsample;
 
       exit Endless_Loop when iNumRuns = 1;

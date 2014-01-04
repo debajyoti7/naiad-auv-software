@@ -1158,20 +1158,35 @@ void Preprocessing_Wrap::quaterNionSwitchingFilter(int src, int dst, double QNSF
 Preprocessing_Wrap::Preprocessing_Wrap(){}
  
 /*********************************************************************************************************************
-*               END PREPROCESSING WRAP                                                                                        *
+*               END PREPROCESSING WRAP                                                                               *
 *********************************************************************************************************************/
+
+
+
+
+/*********************************************************************************************************************
+*               BEGIN 3D WRAP                                                                               *
+*********************************************************************************************************************/
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+
+void three_D_Wrap::readPointCloud(char * name)
+{
+	pcl::PCDReader reader;
+	reader.read<pcl::PointXYZ> (name, *cloud);
+}
 
 void three_D_Wrap::Downsample(void)
 {
 	std::cout<<"starting downsampling\n";
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
-
+	
+/*
   // Fill in the cloud data
   pcl::PCDReader reader;
   // Replace the path below with the path where you saved your file
   reader.read<pcl::PointXYZ> ("table_scene_lms400.pcd", *cloud);
-
+*/
   std::cerr << "Cloud before filtering: " << std::endl;
   std::cerr << *cloud << std::endl;
 
