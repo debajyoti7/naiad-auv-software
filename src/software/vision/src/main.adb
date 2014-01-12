@@ -38,7 +38,8 @@ procedure main is
    iDoQuaternionSwitchingFilter : Integer :=0;
    iDoReadPointCould : Integer := 0;
    iDoRemoveOutliers : Integer := 0;
-   iDoDownsample : Integer :=1;
+   iDoDownsample : Integer :=0;
+   iDoEuclideanCluster : Integer :=1;
 
 
    --image locations
@@ -154,6 +155,10 @@ procedure main is
 
    --Downsample
    dleafSize : Interfaces.C.double := 0.01;
+
+   --Conditional Euclidean clustering
+   dECLeafSize : Interfaces.C.double := 80.0;
+   dSearchRadius : Interfaces.C.double := 300.0;
 
    --wait time when displaying images
    iWaitTime : interfaces.c.int := 0;
@@ -370,6 +375,13 @@ begin
         threeDWrap.readPC1PointCloud(New_String("table_scene_lms400.pcd"));
 	threeDWrap.removeOutliers(iMeanK, dStddevMulThresh);
         threeDWrap.downsample(dleafSize);
+       end if;
+
+       if(iDoEuclideanCluster=1) then
+         threeDWrap.readECData(New_String("Statues_4.pcd"));
+         threeDWrap.ecDownsample(dECLeafSize);
+         threeDWrap.ecNormalEstimation(dSearchRadius);
+         threeDWrap.conditionalEuclideanClustering;
        end if;
 
       exit Endless_Loop when iNumRuns = 1;

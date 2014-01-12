@@ -23,7 +23,14 @@
 #include "/usr/include/pcl-1.7/pcl/filters/voxel_grid.h"
 #include "/usr/include/pcl-1.7/pcl/filters/statistical_outlier_removal.h"
 #include "/usr/include/pcl-1.7/pcl/conversions.h"
+//////////////////////////////////////////////////////////////////////////
+//#include <pcl/point_types.h>
+//#include <pcl/io/pcd_io.h>
+#include "/usr/include/pcl-1.7/pcl/console/time.h"
 
+//#include <pcl/filters/voxel_grid.h>
+#include "/usr/include/pcl-1.7/pcl/features/normal_3d.h"
+#include "/usr/include/pcl-1.7/pcl/segmentation/conditional_euclidean_clustering.h"
 
  
 std::vector<cv::Mat> img(IMAGE_STORE_SIZE);
@@ -761,6 +768,8 @@ float Processing_Wrap::estimateVelocity(void)
 }
 
 
+
+
 ///////////////////////  PRINTOUT BASED ON POSITION      ///////////////////////////////////////////
 
 void Processing_Wrap::estPosition(void)
@@ -1168,11 +1177,19 @@ Preprocessing_Wrap::Preprocessing_Wrap(){}
 /*********************************************************************************************************************
 *               BEGIN 3D WRAP                                                                               *
 *********************************************************************************************************************/
-
+typedef pcl::PointXYZI PointTypeIO;
+typedef pcl::PointXYZINormal PointTypeFull;
 pcl::PointCloud<pcl::PointXYZ>::Ptr pc1Cloud (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr outliers_removed_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PCLPointCloud2::Ptr pc2Cloud (new pcl::PCLPointCloud2 ());
 pcl::PCLPointCloud2::Ptr downsampled_cloud (new pcl::PCLPointCloud2 ());
+pcl::PointCloud<PointTypeIO>::Ptr ecCloudIn (new pcl::PointCloud<PointTypeIO>), ecCloudOut (new pcl::PointCloud<PointTypeIO>);
+pcl::search::KdTree<PointTypeIO>::Ptr search_tree (new pcl::search::KdTree<PointTypeIO>);
+pcl::PointCloud<PointTypeFull>::Ptr ecCloudWithNormals (new pcl::PointCloud<PointTypeFull>);
+pcl::IndicesClustersPtr clusters (new pcl::IndicesClusters), small_clusters (new pcl::IndicesClusters), large_clusters (new pcl::IndicesClusters);
+pcl::console::TicToc tt;
+
+//////////////////////////READ IN PC1 POINT CLOUD ///////////////////////////////////////////////////////
 
 void three_D_Wrap::readPC1PointCloud(char * name)
 {
@@ -1180,11 +1197,16 @@ void three_D_Wrap::readPC1PointCloud(char * name)
 	reader.read<pcl::PointXYZ> (name, *pc1Cloud);
 }
 
+
+//////////////////////////READ IN PC2 POINT CLOUD ///////////////////////////////////////////////////////
 void three_D_Wrap::readPC2PointCloud(char * name)
 {
 	pcl::PCDReader reader;
 	reader.read (name, *pc2Cloud);
 }
+
+
+//////////////////////////REMOVE OUTLIERS ///////////////////////////////////////////////////////
 
 void three_D_Wrap::removeOutliers(int meanK, double stddevMulThresh)
 {
@@ -1204,6 +1226,9 @@ void three_D_Wrap::removeOutliers(int meanK, double stddevMulThresh)
 	std::cout<<"success\n";
 }
 
+
+//////////////////////////DOWNSAMPLE ///////////////////////////////////////////////////////
+
 void three_D_Wrap::downsample(double leafSize)//hardcoded to take output of oulier func, need to change to variable input laters
 {
 	pcl::PCLPointCloud2::Ptr cloud (new pcl::PCLPointCloud2 ());
@@ -1220,7 +1245,124 @@ void three_D_Wrap::downsample(double leafSize)//hardcoded to take output of ouli
 	pcl::PCDWriter writer;
 	writer.write ("downsampled.pcd", *downsampled_cloud, 
          Eigen::Vector4f::Zero (), Eigen::Quaternionf::Identity (), false);
+}
+
+//////////////////////////read in data for euclidean clustering ////////////////////////////////////////////
+void three_D_Wrap::readECData(char * name)
+{
+  // Load the input point cloud
+  std::cerr << "Loading...\n", tt.tic ();
+  pcl::io::loadPCDFile (name, *ecCloudIn);
+  std::cerr << ">> Done: " << tt.toc () << " ms, " << ecCloudIn->points.size () << " points\n";
+}
+
+
+///////////////////////////eculidean clustering downsample //////////////////////////////////////////////////
+void three_D_Wrap::ecDownsample(double leafSize)
+{
+	// Downsample the cloud using a Voxel Grid class
+  std::cerr << "Downsampling...\n", tt.tic ();
+  pcl::VoxelGrid<PointTypeIO> vg;
+  vg.setInputCloud (ecCloudIn);
+  vg.setLeafSize (leafSize, leafSize, leafSize);
+  vg.setDownsampleAllData (true);
+  vg.filter (*ecCloudOut);
+  std::cerr << ">> Done: " << tt.toc () << " ms, " << ecCloudOut->points.size () << " points\n";
+	
+}
+
+
+//////////////////////////normal estimation for euclidean clustering ////////////////////////////////////////////
+
+void three_D_Wrap::ecNormalEstimation(double searchRadius)
+{
+	// Set up a Normal Estimation class and merge data in cloud_with_normals
+  std::cerr << "Computing normals...\n", tt.tic ();
+  pcl::copyPointCloud (*ecCloudOut, *ecCloudWithNormals);
+  pcl::NormalEstimation<PointTypeIO, PointTypeFull> ne;
+  ne.setInputCloud (ecCloudOut);
+  ne.setSearchMethod (search_tree);
+  ne.setRadiusSearch (searchRadius);
+  ne.compute (*ecCloudWithNormals);
+  std::cerr << ">> Done: " << tt.toc () << " ms\n";
+}
+
+bool
+enforceIntensitySimilarity (const PointTypeFull& point_a, const PointTypeFull& point_b, float squared_distance)
+{
+  if (fabs (point_a.intensity - point_b.intensity) < 5.0f)
+    return (true);
+  else
+    return (false);
+}
+
+bool
+enforceCurvatureOrIntensitySimilarity (const PointTypeFull& point_a, const PointTypeFull& point_b, float squared_distance)
+{
+  Eigen::Map<const Eigen::Vector3f> point_a_normal = point_a.normal, point_b_normal = point_b.normal;
+  if (fabs (point_a.intensity - point_b.intensity) < 5.0f)
+    return (true);
+  if (fabs (point_a_normal.dot (point_b_normal)) < 0.05)
+    return (true);
+  return (false);
+}
+
+bool
+customRegionGrowing (const PointTypeFull& point_a, const PointTypeFull& point_b, float squared_distance)
+{
+  Eigen::Map<const Eigen::Vector3f> point_a_normal = point_a.normal, point_b_normal = point_b.normal;
+  if (squared_distance < 10000)
+  {
+    if (fabs (point_a.intensity - point_b.intensity) < 8.0f)
+      return (true);
+    if (fabs (point_a_normal.dot (point_b_normal)) < 0.06)
+      return (true);
+  }
+  else
+  {
+    if (fabs (point_a.intensity - point_b.intensity) < 3.0f)
+      return (true);
+  }
+  return (false);
+}
+
+//////////////////////////Conditional Euclidean Clustering ///////////////////////////////////////////////////////
+
+void three_D_Wrap::conditionalEuclideanClustering(void)
+{
+	
+  // Set up a Conditional Euclidean Clustering class
+  std::cerr << "Segmenting to clusters...\n", tt.tic ();
+  pcl::ConditionalEuclideanClustering<PointTypeFull> cec (true);
+  cec.setInputCloud (ecCloudWithNormals);
+  cec.setConditionFunction (&customRegionGrowing);
+  cec.setClusterTolerance (500.0);
+  cec.setMinClusterSize (ecCloudWithNormals->points.size () / 1000);
+  cec.setMaxClusterSize (ecCloudWithNormals->points.size () / 5);
+  cec.segment (*clusters);
+  cec.getRemovedClusters (small_clusters, large_clusters);
+  std::cerr << ">> Done: " << tt.toc () << " ms\n";
+
+  // Using the intensity channel for lazy visualization of the output
+  for (int i = 0; i < small_clusters->size (); ++i)
+    for (int j = 0; j < (*small_clusters)[i].indices.size (); ++j)
+      ecCloudOut->points[(*small_clusters)[i].indices[j]].intensity = -2.0;
+  for (int i = 0; i < large_clusters->size (); ++i)
+    for (int j = 0; j < (*large_clusters)[i].indices.size (); ++j)
+      ecCloudOut->points[(*large_clusters)[i].indices[j]].intensity = +10.0;
+  for (int i = 0; i < clusters->size (); ++i)
+  {
+    int label = rand () % 8;
+    for (int j = 0; j < (*clusters)[i].indices.size (); ++j)
+      ecCloudOut->points[(*clusters)[i].indices[j]].intensity = label;
+  }
+
+  // Save the output point cloud
+  std::cerr << "Saving...\n", tt.tic ();
+  pcl::io::savePCDFile ("output.pcd", *ecCloudOut);
+  std::cerr << ">> Done: " << tt.toc () << " ms\n";
 
 }
+
 
 three_D_Wrap::three_D_Wrap(){}

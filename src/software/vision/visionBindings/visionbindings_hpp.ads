@@ -332,7 +332,19 @@ package visionBindings_hpp is
       procedure downsample (this : access three_D_Wrap; leafSize : double);  -- visionBindings.hpp:138
       pragma Import (CPP, downsample, "_ZN12three_D_Wrap10downsampleEd");
 
-      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:140
+      procedure readECData (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:140
+      pragma Import (CPP, readECData, "_ZN12three_D_Wrap10readECDataEPc");
+
+      procedure ecDownsample (this : access three_D_Wrap; leafSize : double);  -- visionBindings.hpp:142
+      pragma Import (CPP, ecDownsample, "_ZN12three_D_Wrap12ecDownsampleEd");
+
+      procedure ecNormalEstimation (this : access three_D_Wrap; searchRadius : double);  -- visionBindings.hpp:144
+      pragma Import (CPP, ecNormalEstimation, "_ZN12three_D_Wrap18ecNormalEstimationEd");
+
+      procedure conditionalEuclideanClustering (this : access three_D_Wrap);  -- visionBindings.hpp:146
+      pragma Import (CPP, conditionalEuclideanClustering, "_ZN12three_D_Wrap30conditionalEuclideanClusteringEv");
+
+      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:148
       pragma CPP_Constructor (New_three_D_Wrap, "_ZN12three_D_WrapC1Ev");
 
 

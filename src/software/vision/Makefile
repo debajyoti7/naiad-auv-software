@@ -60,7 +60,7 @@ LIB_DIR = ${foreach dir,${CSC_LIST},${dir}/lib/lib${dir}.so}
 
 ${MAIN} : objects imageobject preproobject proobject ${LIB_DIR}
 	gnatbind -aO${VISIONBINDINGSDIR} -aO${IMAGEOBJDIR} -aO${IMAGEPREPROCESSINGOBJDIR} -aO${IMAGEPROCESSINGOBJDIR} ${MAIN} ${CSC_LIST :%=-a0%/lib } -shared #--LINK=${GPLUS}	
-	gnatlink -f ${MAIN} ${CSC_LIST :%= -l%} ${ADDOBJ1} -lboost_system -lpcl_common -lpcl_io -lpcl_filters --LINK=g++ -lstdc++ `pkg-config opencv --cflags --libs`  #${GPLUS}
+	gnatlink -f ${MAIN} ${CSC_LIST :%= -l%} ${ADDOBJ1} -lboost_system -lpcl_common -lpcl_io -lpcl_filters -lpcl_search -lpcl_kdtree -lpcl_octree -lpcl_surface -lpcl_sample_consensus -lpcl_features -lpcl_segmentation -lpcl_io -lpcl_registration -lpcl_keypoints -lpcl_recognition -lpcl_visualization -lpcl_people -lpcl_outofcore -lpcl_tracking -lpcl_apps --LINK=g++ -lstdc++ `pkg-config opencv --cflags --libs`  #${GPLUS}
 
 objects : 
 	#recompile the sources

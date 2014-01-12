@@ -137,5 +137,13 @@ virtual void removeOutliers(int meanK, double stddevMulThresh);
 
 virtual void downsample(double leafSize);
 
+virtual void readECData(char * name);
+
+virtual void ecDownsample(double leafSize);
+
+virtual void ecNormalEstimation(double searchRadius);
+
+virtual void conditionalEuclideanClustering(void);
+
 three_D_Wrap();
 };
