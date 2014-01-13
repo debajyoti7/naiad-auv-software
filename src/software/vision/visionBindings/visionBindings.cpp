@@ -8,30 +8,22 @@
 #include<string>
 #include<queue>
 
-//#include <pcl/io/pcd_io.h>
-//#include <pcl/point_types.h>
-//#include <pcl/filters/voxel_grid.h>
-
-//#include <Eigen>
+/////////////////////pcl includes
 #include "/usr/include/pcl-1.7/pcl/pcl_config.h"
 #include "/usr/include/pcl-1.7/pcl/pcl_macros.h"
 #include "/usr/include/pcl-1.7/pcl/PCLHeader.h"
-
 #include "/usr/include/pcl-1.7/pcl/point_cloud.h"
 #include "/usr/include/pcl-1.7/pcl/io/pcd_io.h"
 #include "/usr/include/pcl-1.7/pcl/point_types.h"
 #include "/usr/include/pcl-1.7/pcl/filters/voxel_grid.h"
 #include "/usr/include/pcl-1.7/pcl/filters/statistical_outlier_removal.h"
 #include "/usr/include/pcl-1.7/pcl/conversions.h"
-//////////////////////////////////////////////////////////////////////////
-//#include <pcl/point_types.h>
-//#include <pcl/io/pcd_io.h>
 #include "/usr/include/pcl-1.7/pcl/console/time.h"
-
-//#include <pcl/filters/voxel_grid.h>
 #include "/usr/include/pcl-1.7/pcl/features/normal_3d.h"
 #include "/usr/include/pcl-1.7/pcl/segmentation/conditional_euclidean_clustering.h"
-
+#include "/usr/include/pcl-1.7/pcl/kdtree/kdtree_flann.h"
+#include "/usr/include/pcl-1.7/pcl/surface/gp3.h"
+#include "/usr/include/pcl-1.7/pcl/io/vtk_io.h"
  
 std::vector<cv::Mat> img(IMAGE_STORE_SIZE);
 std::vector<cv::Vec3f> circles;
@@ -1188,6 +1180,9 @@ pcl::search::KdTree<PointTypeIO>::Ptr search_tree (new pcl::search::KdTree<Point
 pcl::PointCloud<PointTypeFull>::Ptr ecCloudWithNormals (new pcl::PointCloud<PointTypeFull>);
 pcl::IndicesClustersPtr clusters (new pcl::IndicesClusters), small_clusters (new pcl::IndicesClusters), large_clusters (new pcl::IndicesClusters);
 pcl::console::TicToc tt;
+pcl::PointCloud<pcl::PointXYZ>::Ptr triCloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+pcl::PointCloud<pcl::Normal>::Ptr triNormals (new pcl::PointCloud<pcl::Normal>);
 
 //////////////////////////READ IN PC1 POINT CLOUD ///////////////////////////////////////////////////////
 
@@ -1364,5 +1359,75 @@ void three_D_Wrap::conditionalEuclideanClustering(void)
 
 }
 
+
+//////////////////////////////read data and convert to blob/////////////////////
+
+void three_D_Wrap::readAndConvertToBlob(char * name)
+{
+  pcl::PCLPointCloud2 cloud_blob;
+  
+  pcl::io::loadPCDFile (name, cloud_blob);
+  pcl::fromPCLPointCloud2 (cloud_blob, *triCloud);
+  //* the data should be available in cloud
+}
+
+
+///////////////////////////////triangulation mesh normal estimation //////////
+
+void three_D_Wrap::triNormalEst(void)
+{
+	// Normal estimation*
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
+  //pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+  tree->setInputCloud (triCloud);
+  n.setInputCloud (triCloud);
+  n.setSearchMethod (tree);
+  n.setKSearch (20);
+  n.compute (*triNormals);
+  //* normals should not contain the point normals + surface curvatures
+}
+/////////////////////////////triangulation mesh ////////////////////////////////
+
+void three_D_Wrap::greedyTriangulation(void)
+{
+  
+
+  // Concatenate the XYZ and normal fields*
+  pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals (new pcl::PointCloud<pcl::PointNormal>);
+  pcl::concatenateFields (*triCloud, *triNormals, *cloud_with_normals);
+  //* cloud_with_normals = cloud + normals
+
+  // Create search tree*
+  pcl::search::KdTree<pcl::PointNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointNormal>);
+  tree2->setInputCloud (cloud_with_normals);
+
+  // Initialize objects
+  pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
+  pcl::PolygonMesh triangles;
+
+  // Set the maximum distance between connected points (maximum edge length)
+  gp3.setSearchRadius (0.025);
+
+  // Set typical values for the parameters
+  gp3.setMu (2.5);
+  gp3.setMaximumNearestNeighbors (100);
+  gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
+  gp3.setMinimumAngle(M_PI/18); // 10 degrees
+  gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
+  gp3.setNormalConsistency(false);
+
+  // Get result
+  gp3.setInputCloud (cloud_with_normals);
+  gp3.setSearchMethod (tree2);
+  gp3.reconstruct (triangles);
+
+  // Additional vertex information
+  std::vector<int> parts = gp3.getPartIDs();
+  std::vector<int> states = gp3.getPointStates();
+  
+  pcl::io::saveVTKFile ("mesh.vtk", triangles);
+
+}
 
 three_D_Wrap::three_D_Wrap(){}

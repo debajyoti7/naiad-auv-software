@@ -39,7 +39,8 @@ procedure main is
    iDoReadPointCould : Integer := 0;
    iDoRemoveOutliers : Integer := 0;
    iDoDownsample : Integer :=0;
-   iDoEuclideanCluster : Integer :=1;
+   iDoEuclideanCluster : Integer :=0;
+   iDoTriMesh : Integer :=1;
 
 
    --image locations
@@ -383,6 +384,12 @@ begin
          threeDWrap.ecNormalEstimation(dSearchRadius);
          threeDWrap.conditionalEuclideanClustering;
        end if;
+
+	if(iDoTriMesh=1) then
+	  threeDWrap.readAndConvertToBlob(New_String("bun0.pcd"));
+	  threeDWrap.triNormalEst;
+	  threeDWrap.greedyTriangulation;	  
+	end if;
 
       exit Endless_Loop when iNumRuns = 1;
 

@@ -344,7 +344,16 @@ package visionBindings_hpp is
       procedure conditionalEuclideanClustering (this : access three_D_Wrap);  -- visionBindings.hpp:146
       pragma Import (CPP, conditionalEuclideanClustering, "_ZN12three_D_Wrap30conditionalEuclideanClusteringEv");
 
-      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:148
+      procedure greedyTriangulation (this : access three_D_Wrap);  -- visionBindings.hpp:148
+      pragma Import (CPP, greedyTriangulation, "_ZN12three_D_Wrap19greedyTriangulationEv");
+
+      procedure readAndConvertToBlob (this : access three_D_Wrap; name : Interfaces.C.Strings.chars_ptr);  -- visionBindings.hpp:150
+      pragma Import (CPP, readAndConvertToBlob, "_ZN12three_D_Wrap20readAndConvertToBlobEPc");
+
+      procedure triNormalEst (this : access three_D_Wrap);  -- visionBindings.hpp:152
+      pragma Import (CPP, triNormalEst, "_ZN12three_D_Wrap12triNormalEstEv");
+
+      function New_three_D_Wrap return three_D_Wrap;  -- visionBindings.hpp:154
       pragma CPP_Constructor (New_three_D_Wrap, "_ZN12three_D_WrapC1Ev");
 
 

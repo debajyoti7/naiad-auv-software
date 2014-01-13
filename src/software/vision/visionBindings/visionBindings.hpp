@@ -145,5 +145,11 @@ virtual void ecNormalEstimation(double searchRadius);
 
 virtual void conditionalEuclideanClustering(void);
 
+virtual void greedyTriangulation(void);
+
+virtual void readAndConvertToBlob(char * name);
+
+virtual void triNormalEst(void);
+
 three_D_Wrap();
 };
